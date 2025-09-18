@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฟอร์มรายละเอียดรายวิชา</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #1341a8 0%, #2563eb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(19, 65, 168, 0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1341a8 0%, #2563eb 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1341a8;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1341a8;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Kanit', sans-serif;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1341a8;
+            box-shadow: 0 0 0 3px rgba(19, 65, 168, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 8px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"],
+        .checkbox-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+            accent-color: #1341a8;
+        }
+        
+        .instructor-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .coordinator-row {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #1341a8 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 30px;
+            font-family: 'Kanit', sans-serif;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(19, 65, 168, 0.3);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1341a8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pdf-preview {
+            display: none;
+            background: white;
+            padding: 40px;
+            margin: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            font-family: 'Kanit', sans-serif;
+        }
+        
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #1341a8;
+            padding-bottom: 20px;
+        }
+        
+        .pdf-section {
+            margin-bottom: 25px;
+        }
+        
+        .pdf-section-title {
+            background: #1341a8;
+            color: white;
+            padding: 10px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .pdf-field {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .pdf-field strong {
+            color: #333;
+            min-width: 200px;
+            margin-right: 15px;
+        }
+        
+        .signature-section {
+            margin-top: 50px;
+            text-align: right;
+        }
+        
+        .inline-input {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 10px;
+        }
+        
+        .inline-input input {
+            width: 100px;
+            padding: 5px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row,
+            .instructor-row,
+            .coordinator-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 ฟอร์มรายละเอียดรายวิชา</h1>
+            <p>กรอกข้อมูลรายวิชาและดาวน์โหลดเป็น PDF</p>
+        </div>
+        
+        <div class="form-container">
+            <form id="courseForm">
+                <!-- ส่วนที่ 1: รายละเอียดทั่วไป -->
+                <div class="section">
+                    <h2 class="section-title">ส่วนที่ 1 รายละเอียดทั่วไป (General Details)</h2>
+                    
+                    <div class="form-group">
+                        <label for="courseCode">1.1 รหัสรายวิชา (Course Code)</label>
+                        <input type="text" id="courseCode" name="courseCode">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.2 ชื่อรายวิชา (Course Name)</label>
+                        <div style="margin-left: 20px;">
+                            <div class="form-group">
+                                <label for="courseNameTh">- ชื่อรายวิชาไทย (Course Name Thai)</label>
+                                <input type="text" id="courseNameTh" name="courseNameTh">
+                            </div>
+                            <div class="form-group">
+                                <label for="courseNameEn">- ชื่อรายวิชาอังกฤษ (Course Name English)</label>
+                                <input type="text" id="courseNameEn" name="courseNameEn">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.3 การเก็บหน่วยกิต (Credit/Microcredential)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noCredit" name="creditType" value="ไม่มี">
+                                <label for="noCredit">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasCredit" name="creditType" value="เก็บหน่วยกิต">
+                                <label for="hasCredit">เก็บหน่วยกิต จำนวน</label>
+                                <div class="inline-input">
+                                    <input type="number" name="creditAmount" step="0.5" placeholder="จำนวน">
+                                </div>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="microCredit" name="creditType" value="เก็บ Micro-credit">
+                                <label for="microCredit">เก็บ Micro-credit จำนวน</label>
+                                <div class="inline-input">
+                                    <input type="number" name="microcreditAmount" step="0.5" placeholder="จำนวน">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="courseDescription">1.4 คำอธิบายรายวิชา (Course Description)</label>
+                        <textarea id="courseDescription" name="courseDescription"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="courseObjectives">1.5 วัตถุประสงค์รายวิชา (Course Objectives)</label>
+                        <textarea id="courseObjectives" name="courseObjectives"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="learningOutcome">1.6 ผลลัพธ์การเรียนรู้รายวิชา (Learning Outcome)</label>
+                        <textarea id="learningOutcome" name="learningOutcome"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.7 กลุ่มเป้าหมาย (Target Group)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="preDegree" name="targetGroup" value="ผู้เรียนก่อนปริญญา">
+                                <label for="preDegree">ผู้เรียนก่อนปริญญา</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="undergraduate" name="targetGroup" value="ผู้ที่กำลังศึกษาระดับปริญญาตรี">
+                                <label for="undergraduate">ผู้ที่กำลังศึกษาระดับปริญญาตรี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="graduate" name="targetGroup" value="ผู้ที่กำลังศึกษาระดับบัณฑิตศึกษา">
+                                <label for="graduate">ผู้ที่กำลังศึกษาระดับบัณฑิตศึกษา</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="working" name="targetGroup" value="ผู้เรียนวัยทำงาน">
+                                <label for="working">ผู้เรียนวัยทำงาน</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="elderly" name="targetGroup" value="ผู้เรียนสูงวัย">
+                                <label for="elderly">ผู้เรียนสูงวัย</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.8 ความรู้พื้นฐานที่ต้องมีมาก่อน (Basic Knowledge)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noBasicKnowledge" name="basicKnowledgeType" value="ไม่มี">
+                                <label for="noBasicKnowledge">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasBasicKnowledge" name="basicKnowledgeType" value="ผู้เรียนต้องผ่านรายวิชา">
+                                <label for="hasBasicKnowledge">ผู้เรียนต้องผ่านรายวิชา</label>
+                                <div class="inline-input">
+                                    <input type="text" name="basicKnowledgeDetail" placeholder="ระบุรายวิชา">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.9 เงื่อนไข/คุณสมบัติของผู้เรียน (Qualifications of Applicants)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noQualifications" name="qualificationType" value="ไม่มี">
+                                <label for="noQualifications">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasQualifications" name="qualificationType" value="ผู้เรียนต้องคุณสมบัติ">
+                                <label for="hasQualifications">ผู้เรียนต้องคุณสมบัติ</label>
+                                <div class="inline-input">
+                                    <input type="text" name="qualificationsDetail" placeholder="ระบุคุณสมบัติ">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="totalMinutes">1.10 ระยะเวลาเรียนรวม (นาที)</label>
+                        <input type="number" id="totalMinutes" name="totalMinutes" placeholder="จำนวนนาที">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.11 รูปแบบการจัดการเรียนการสอน</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="online" name="teachingFormat" value="เรียนออนไลน์เท่านั้น">
+                                <label for="online">เรียนออนไลน์เท่านั้น</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="classroom" name="teachingFormat" value="เรียนในชั้นเรียนเท่านั้น">
+                                <label for="classroom">เรียนในชั้นเรียนเท่านั้น</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hybrid" name="teachingFormat" value="เรียนผสมผสาน (Hybrid)">
+                                <label for="hybrid">เรียนผสมผสาน (Hybrid)</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.12 วันเปิด/ปิดรายวิชา (Course Duration)</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="openDate">เปิด (Open)</label>
+                                <input type="date" id="openDate" name="openDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="closeDate">ปิด (Close)</label>
+                                <input type="date" id="closeDate" name="closeDate">
+                            </div>
+                        </div>
+                        <div class="checkbox-item" style="margin-top: 10px;">
+                            <input type="checkbox" id="alwaysOpen" name="alwaysOpen" value="เปิดตลอด">
+                            <label for="alwaysOpen">เปิดตลอด</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.13 ภาษา (Language)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="thai" name="language" value="ไทย">
+                                <label for="thai">ไทย</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="english" name="language" value="อังกฤษ">
+                                <label for="english">อังกฤษ</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="otherLang" name="language" value="อื่น">
+                                <label for="otherLang">อื่น</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.14 ค่าธรรมเนียมรายวิชา (Course Fees)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="free" name="priceType" value="ฟรี">
+                                <label for="free">ฟรี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="paid" name="priceType" value="เก็บค่าธรรมเนียม">
+                                <label for="paid">เก็บค่าธรรมเนียม ระบุราคา</label>
+                                <div class="inline-input">
+                                    <input type="number" name="price" placeholder="ราคา">
+                                    <span>บาท</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="priceNote">หมายเหตุอื่น</label>
+                            <textarea id="priceNote" name="priceNote" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.15 หมวดหมู่ Skills (Category)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="health" name="skillsCategory" value="Health Literacy Skills">
+                                <label for="health">Health Literacy Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="entrepreneurial" name="skillsCategory" value="Entrepreneurial Literacy Skills">
+                                <label for="entrepreneurial">Entrepreneurial Literacy Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="communication" name="skillsCategory" value="Communication & Language Skills">
+                                <label for="communication">Communication & Language Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="creative" name="skillsCategory" value="Creative & Innovative Skills">
+                                <label for="creative">Creative & Innovative Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="digital" name="skillsCategory" value="Digital Literacy Skills">
+                                <label for="digital">Digital Literacy Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="leadership" name="skillsCategory" value="Leadership & Management Skills">
+                                <label for="leadership">Leadership & Management Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="financial" name="skillsCategory" value="Financial Literacy Skills">
+                                <label for="financial">Financial Literacy Skills</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="environmental" name="skillsCategory" value="Environmental Literacy Skills">
+                                <label for="environmental">Environmental Literacy Skills</label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="otherSkills">อื่นๆ โปรดระบุ</label>
+                            <input type="text" id="otherSkills" name="otherSkills" placeholder="ระบุหมวดหมู่อื่นๆ">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>1.16 วิทยากร/ผู้บรรยาย/อาจารย์ผู้สอน (Instructor)</label>
+                        <div id="instructors">
+                            <div class="instructor-row">
+                                <div class="form-group">
+                                    <label>ชื่อ-สกุล (Name-Surname)</label>
+                                    <input type="text" name="instructorName1" placeholder="ชื่อ-นามสกุล">
+                                </div>
+                                <div class="form-group">
+                                    <label>ตำแหน่ง (Position)</label>
+                                    <input type="text" name="instructorPosition1" placeholder="ตำแหน่ง">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" name="instructorEmail1" placeholder="อีเมล">
+                                </div>
+                            </div>
+                            
+                            <div class="instructor-row">
+                                <div class="form-group">
+                                    <label>ชื่อ-สกุล (Name-Surname)</label>
+                                    <input type="text" name="instructorName2" placeholder="ชื่อ-นามสกุล">
+                                </div>
+                                <div class="form-group">
+                                    <label>ตำแหน่ง (Position)</label>
+                                    <input type="text" name="instructorPosition2" placeholder="ตำแหน่ง">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" name="instructorEmail2" placeholder="อีเมล">
+                                </div>
+                            </div>
+                            
+                            <div class="instructor-row">
+                                <div class="form-group">
+                                    <label>ชื่อ-สกุล (Name-Surname)</label>
+                                    <input type="text" name="instructorName3" placeholder="ชื่อ-นามสกุล">
+                                </div>
+                                <div class="form-group">
+                                    <label>ตำแหน่ง (Position)</label>
+                                    <input type="text" name="instructorPosition3" placeholder="ตำแหน่ง">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" name="instructorEmail3" placeholder="อีเมล">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 2: ข้อมูลประกอบรายวิชา -->
+                <div class="section">
+                    <h2 class="section-title">ส่วนที่ 2 ข้อมูลประกอบรายวิชา</h2>
+                    
+                    <div class="form-group">
+                        <label>2.1 ภาพปกรายวิชา (Thumbnail)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noThumbnail" name="thumbnailType" value="ไม่มี">
+                                <label for="noThumbnail">ไม่มี (กรณีไม่มีภาพ จะถูกสร้างให้อัตโนมัติโดยแอดมิน MUCE)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasThumbnail" name="thumbnailType" value="มี">
+                                <label for="hasThumbnail">มี ระบุลิงก์:</label>
+                                <div class="inline-input">
+                                    <input type="url" name="thumbnailLink" placeholder="https://...">
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                            (ภาพ ขนาด 960px * 540px | ชนิดไฟล์ .jpg, .png)
+                        </p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>2.2 ใบประกาศนียบัตร (Certificate)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noCertificate" name="certificateType" value="ไม่มี">
+                                <label for="noCertificate">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasCertificate" name="certificateType" value="มี">
+                                <label for="hasCertificate">มี ระบุลิงก์:</label>
+                                <div class="inline-input">
+                                    <input type="url" name="certificateLink" placeholder="https://...">
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                            (แนบไฟล์ภาพ ขนาด 3696 x 2565 px | ชนิดไฟล์ .jpg, .png)
+                        </p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>2.3 วิดีโอตัวอย่าง (Introduction Video)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noIntroVideo" name="introVideoType" value="ไม่มี">
+                                <label for="noIntroVideo">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasIntroVideo" name="introVideoType" value="มี">
+                                <label for="hasIntroVideo">มี ระบุลิงก์:</label>
+                                <div class="inline-input">
+                                    <input type="url" name="introVideoLink" placeholder="https://...">
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                            (ความยาววิดีโอ 1-3 นาที | ชนิดไฟล์ .mp4)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 3: การสร้างบทเรียน -->
+                <div class="section">
+                    <h2 class="section-title">ส่วนที่ 3 การสร้างบทเรียน/หัวข้อเรียนในรายวิชา (Course Modules/Topics)</h2>
+                    
+                    <div class="form-group">
+                        <label>3.1 จำนวนวิดีโอเรียน (Video)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noVideos" name="videosType" value="ไม่มี">
+                                <label for="noVideos">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasVideos" name="videosType" value="มี">
+                                <label for="hasVideos">มี ระบุจำนวนทั้งหมด</label>
+                                <div class="inline-input">
+                                    <input type="number" name="videosCount" placeholder="จำนวน">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>3.2 เอกสารประกอบการสอน (Document)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noDocuments" name="documentsType" value="ไม่มี">
+                                <label for="noDocuments">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasDocuments" name="documentsType" value="มี">
+                                <label for="hasDocuments">มี ระบุจำนวนทั้งหมด</label>
+                                <div class="inline-input">
+                                    <input type="number" name="documentsCount" placeholder="จำนวน">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>3.3 แบบทดสอบ (Test)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" id="noTests" name="testsType" value="ไม่มี">
+                                <label for="noTests">ไม่มี</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" id="hasTests" name="testsType" value="มี">
+                                <label for="hasTests">มี ระบุจำนวนทั้งหมด</label>
+                                <div class="inline-input">
+                                    <input type="number" name="testsCount" placeholder="จำนวน">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 4: ผู้ประสานงาน -->
+                <div class="section">
+                    <h2 class="section-title">ส่วนที่ 4 ผู้ประสานงานรายวิชา</h2>
+                    
+                    <div id="coordinators">
+                        <div class="coordinator-row">
+                            <div class="form-group">
+                                <label>ชื่อ-นามสกุล (อังกฤษ)</label>
+                                <input type="text" name="coordinatorName1" placeholder="Name-Surname">
+                            </div>
+                            <div class="form-group">
+                                <label>E-Mail</label>
+                                <input type="email" name="coordinatorEmail1" placeholder="อีเมล">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="tel" name="coordinatorMobile1" placeholder="เบอร์โทร">
+                            </div>
+                        </div>
+                        
+                        <div class="coordinator-row">
+                            <div class="form-group">
+                                <label>ชื่อ-นามสกุล (อังกฤษ)</label>
+                                <input type="text" name="coordinatorName2" placeholder="Name-Surname">
+                            </div>
+                            <div class="form-group">
+                                <label>E-Mail</label>
+                                <input type="email" name="coordinatorEmail2" placeholder="อีเมล">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="tel" name="coordinatorMobile2" placeholder="เบอร์โทร">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ลายเซ็น -->
+                <div class="section">
+                    <h2 class="section-title">ลายเซ็นผู้รับผิดชอบ</h2>
+                    
+                    <div class="form-group">
+                        <label for="signerName">ชื่อผู้ลงนาม</label>
+                        <input type="text" id="signerName" name="signerName" placeholder="ชื่อ-นามสกุล">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signerPosition">ตำแหน่ง</label>
+                        <input type="text" id="signerPosition" name="signerPosition" placeholder="ตำแหน่ง">
+                    </div>
+                </div>
+
+                <button type="submit" class="download-btn">
+                    📥 สร้างและดาวน์โหลด PDF
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>กำลังสร้างไฟล์ PDF...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden PDF Preview -->
+    <div id="pdfPreview" class="pdf-preview">
+        <div class="pdf-header">
+            <h2>📚 ฟอร์มรายละเอียดรายวิชา</h2>
+            <p>วันที่: <span id="currentDate"></span></p>
+        </div>
+        <div id="pdfContent">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        
+        document.getElementById('courseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Get all form values
+            for (let [key, value] of formData.entries()) {
+                if (data[key]) {
+                    if (Array.isArray(data[key])) {
+                        data[key].push(value);
+                    } else {
+                        data[key] = [data[key], value];
+                    }
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // Get checkbox values
+            const targetGroups = [];
+            document.querySelectorAll('input[name="targetGroup"]:checked').forEach(cb => {
+                targetGroups.push(cb.value);
+            });
+            
+            const languages = [];
+            document.querySelectorAll('input[name="language"]:checked').forEach(cb => {
+                languages.push(cb.value);
+            });
+            
+            const skillsCategories = [];
+            document.querySelectorAll('input[name="skillsCategory"]:checked').forEach(cb => {
+                skillsCategories.push(cb.value);
+            });
+            
+            // Set current date
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = dateStr;
+            
+            // Populate PDF content
+            const pdfContent = document.getElementById('pdfContent');
+            pdfContent.innerHTML = `
+                <div class="pdf-section">
+                    <div class="pdf-section-title">ส่วนที่ 1 รายละเอียดทั่วไป (General Details)</div>
+                    <div class="pdf-field"><strong>1.1 รหัสรายวิชา:</strong> <span>${data.courseCode || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.2 ชื่อรายวิชาไทย:</strong> <span>${data.courseNameTh || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.2 ชื่อรายวิชาอังกฤษ:</strong> <span>${data.courseNameEn || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.3 การเก็บหน่วยกิต:</strong> <span>${data.creditType || 'ไม่ระบุ'} ${data.creditAmount ? '(' + data.creditAmount + ')' : ''} ${data.microcreditAmount ? '(' + data.microcreditAmount + ')' : ''}</span></div>
+                    <div class="pdf-field"><strong>1.4 คำอธิบายรายวิชา:</strong> <span>${data.courseDescription || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.5 วัตถุประสงค์รายวิชา:</strong> <span>${data.courseObjectives || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.6 ผลลัพธ์การเรียนรู้:</strong> <span>${data.learningOutcome || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.7 กลุ่มเป้าหมาย:</strong> <span>${targetGroups.join(', ') || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.8 ความรู้พื้นฐาน:</strong> <span>${data.basicKnowledgeType || 'ไม่ระบุ'} ${data.basicKnowledgeDetail ? '(' + data.basicKnowledgeDetail + ')' : ''}</span></div>
+                    <div class="pdf-field"><strong>1.9 คุณสมบัติผู้เรียน:</strong> <span>${data.qualificationType || 'ไม่ระบุ'} ${data.qualificationsDetail ? '(' + data.qualificationsDetail + ')' : ''}</span></div>
+                    <div class="pdf-field"><strong>1.10 ระยะเวลาเรียน:</strong> <span>${data.totalMinutes || 'ไม่ระบุ'} นาที</span></div>
+                    <div class="pdf-field"><strong>1.11 รูปแบบการสอน:</strong> <span>${data.teachingFormat || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.12 วันเปิด-ปิด:</strong> <span>${data.openDate || 'ไม่ระบุ'} - ${data.closeDate || 'ไม่ระบุ'} ${data.alwaysOpen ? '(เปิดตลอด)' : ''}</span></div>
+                    <div class="pdf-field"><strong>1.13 ภาษา:</strong> <span>${languages.join(', ') || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>1.14 ค่าธรรมเนียม:</strong> <span>${data.priceType || 'ไม่ระบุ'} ${data.price ? '(' + data.price + ' บาท)' : ''}</span></div>
+                    <div class="pdf-field"><strong>หมายเหตุค่าธรรมเนียม:</strong> <span>${data.priceNote || 'ไม่มี'}</span></div>
+                    <div class="pdf-field"><strong>1.15 หมวดหมู่ Skills:</strong> <span>${skillsCategories.join(', ') || 'ไม่ระบุ'} ${data.otherSkills ? '(อื่นๆ: ' + data.otherSkills + ')' : ''}</span></div>
+                </div>
+                
+                <div class="pdf-section">
+                    <div class="pdf-section-title">1.16 วิทยากร/ผู้บรรยาย/อาจารย์ผู้สอน</div>
+                    <div class="pdf-field"><strong>วิทยากรคนที่ 1:</strong> <span>${data.instructorName1 || 'ไม่ระบุ'} (${data.instructorPosition1 || 'ไม่ระบุ'}) - ${data.instructorEmail1 || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>วิทยากรคนที่ 2:</strong> <span>${data.instructorName2 || 'ไม่ระบุ'} (${data.instructorPosition2 || 'ไม่ระบุ'}) - ${data.instructorEmail2 || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>วิทยากรคนที่ 3:</strong> <span>${data.instructorName3 || 'ไม่ระบุ'} (${data.instructorPosition3 || 'ไม่ระบุ'}) - ${data.instructorEmail3 || 'ไม่ระบุ'}</span></div>
+                </div>
+                
+                <div class="pdf-section">
+                    <div class="pdf-section-title">ส่วนที่ 2 ข้อมูลประกอบรายวิชา</div>
+                    <div class="pdf-field"><strong>2.1 ภาพปกรายวิชา:</strong> <span>${data.thumbnailType || 'ไม่ระบุ'} ${data.thumbnailLink ? '(' + data.thumbnailLink + ')' : ''}</span></div>
+                    <div class="pdf-field"><strong>2.2 ใบประกาศนียบัตร:</strong> <span>${data.certificateType || 'ไม่ระบุ'} ${data.certificateLink ? '(' + data.certificateLink + ')' : ''}</span></div>
+                    <div class="pdf-field"><strong>2.3 วิดีโอตัวอย่าง:</strong> <span>${data.introVideoType || 'ไม่ระบุ'} ${data.introVideoLink ? '(' + data.introVideoLink + ')' : ''}</span></div>
+                </div>
+                
+                <div class="pdf-section">
+                    <div class="pdf-section-title">ส่วนที่ 3 การสร้างบทเรียน/หัวข้อเรียนในรายวิชา</div>
+                    <div class="pdf-field"><strong>3.1 วิดีโอเรียน:</strong> <span>${data.videosType || 'ไม่ระบุ'} ${data.videosCount ? '(' + data.videosCount + ' วิดีโอ)' : ''}</span></div>
+                    <div class="pdf-field"><strong>3.2 เอกสารประกอบ:</strong> <span>${data.documentsType || 'ไม่ระบุ'} ${data.documentsCount ? '(' + data.documentsCount + ' ไฟล์)' : ''}</span></div>
+                    <div class="pdf-field"><strong>3.3 แบบทดสอบ:</strong> <span>${data.testsType || 'ไม่ระบุ'} ${data.testsCount ? '(' + data.testsCount + ' ชุด)' : ''}</span></div>
+                </div>
+                
+                <div class="pdf-section">
+                    <div class="pdf-section-title">ส่วนที่ 4 ผู้ประสานงานรายวิชา</div>
+                    <div class="pdf-field"><strong>ผู้ประสานงานคนที่ 1:</strong> <span>${data.coordinatorName1 || 'ไม่ระบุ'} - ${data.coordinatorEmail1 || 'ไม่ระบุ'} - ${data.coordinatorMobile1 || 'ไม่ระบุ'}</span></div>
+                    <div class="pdf-field"><strong>ผู้ประสานงานคนที่ 2:</strong> <span>${data.coordinatorName2 || 'ไม่ระบุ'} - ${data.coordinatorEmail2 || 'ไม่ระบุ'} - ${data.coordinatorMobile2 || 'ไม่ระบุ'}</span></div>
+                </div>
+                
+                <div class="signature-section">
+                    <p>ลงนาม..........................................................................</p>
+                    <p>(${data.signerName || '........................................'})</p>
+                    <p>ตำแหน่ง ${data.signerPosition || '........................................'}</p>
+                </div>
+            `;
+            
+            // Show preview temporarily for capture
+            const preview = document.getElementById('pdfPreview');
+            preview.style.display = 'block';
+            preview.style.position = 'absolute';
+            preview.style.left = '-9999px';
+            
+            try {
+                // Create PDF using html2canvas and jsPDF
+                const canvas = await html2canvas(preview, {
+                    scale: 1.5,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: preview.scrollWidth,
+                    height: preview.scrollHeight
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Generate filename with timestamp
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `course-form-${timestamp}.pdf`;
+                
+                // Download PDF
+                pdf.save(filename);
+                
+                // Show success message
+                alert('✅ ไฟล์ PDF ถูกดาวน์โหลดเรียบร้อยแล้ว!');
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('❌ เกิดข้อผิดพลาดในการสร้าง PDF กรุณาลองใหม่อีกครั้ง');
+            } finally {
+                // Hide loading and preview
+                document.getElementById('loading').style.display = 'none';
+                preview.style.display = 'none';
+            }
+        });
+        
+        // Add smooth animations
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', function() {
+                this.style.transform = 'scale(1.02)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            element.addEventListener('blur', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'980fb000f3f28949',t:'MTc1ODE4NjM4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
