@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Course Form to PDF</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background: #f5f7ff;
+      color: #333;
+      margin: 20px;
+    }
+    h2 {
+      color: #1341a8;
+      border-bottom: 2px solid #1341a8;
+      padding-bottom: 5px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 6px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: 'Kanit', sans-serif;
+    }
+    textarea { min-height: 60px; }
+    .section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #1341a8;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background: #0f2f78; }
+  </style>
+</head>
+<body>
+
+  <h1 style="color:#1341a8">Course Form</h1>
+
+  <!-- Section 1 -->
+  <div class="section">
+    <h2>ส่วนที่ 1 รายละเอียดทั่วไป (General details)</h2>
+    <label>1.1 รหัสรายวิชา (Course code)</label>
+    <input type="text" id="courseCode">
+
+    <label>1.2 ชื่อรายวิชาไทย (Course Name - TH)</label>
+    <input type="text" id="courseNameTH">
+
+    <label>1.2 ชื่อรายวิชาอังกฤษ (Course Name - EN)</label>
+    <input type="text" id="courseNameEN">
+
+    <label>1.4 คำอธิบายรายวิชา (Course description)</label>
+    <textarea id="courseDesc"></textarea>
+
+    <label>1.5 วัตถุประสงค์รายวิชา (Course objectives)</label>
+    <textarea id="courseObj"></textarea>
+
+    <label>1.6 ผลลัพธ์การเรียนรู้รายวิชา (Learning outcome)</label>
+    <textarea id="learningOutcome"></textarea>
+  </div>
+
+  <!-- Section 4 (Coordinator) -->
+  <div class="section">
+    <h2>ส่วนที่ 4 ผู้ประสานงานรายวิชา (Coordinator)</h2>
+    <label>ชื่อ-นามสกุล (อังกฤษ)</label>
+    <input type="text" id="coordName">
+
+    <label>E-Mail</label>
+    <input type="email" id="coordEmail">
+
+    <label>Mobile number</label>
+    <input type="text" id="coordMobile">
+  </div>
+
+  <button onclick="generatePDF()">ดาวน์โหลด PDF</button>
+
+  <script>
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Title
+      doc.setFont("Kanit", "normal");
+      doc.setFontSize(16);
+      doc.text("Course Information", 20, 20);
+
+      // General details
+      doc.setFontSize(12);
+      doc.text("Course Code: " + document.getElementById("courseCode").value, 20, 40);
+      doc.text("Course Name (TH): " + document.getElementById("courseNameTH").value, 20, 50);
+      doc.text("Course Name (EN): " + document.getElementById("courseNameEN").value, 20, 60);
+      doc.text("Description: " + document.getElementById("courseDesc").value, 20, 70);
+      doc.text("Objectives: " + document.getElementById("courseObj").value, 20, 90);
+      doc.text("Learning Outcome: " + document.getElementById("learningOutcome").value, 20, 110);
+
+      // Coordinator
+      doc.text("Coordinator: " + document.getElementById("coordName").value, 20, 130);
+      doc.text("Email: " + document.getElementById("coordEmail").value, 20, 140);
+      doc.text("Mobile: " + document.getElementById("coordMobile").value, 20, 150);
+
+      // Save PDF
+      doc.save("course-form.pdf");
+    }
+  </script>
+</body>
+</html>
